@@ -49,12 +49,14 @@ app.post('/', async (req, res) => {
         const from = message.from;
         console.log(`Received message from ${from}: ${message.text.body}`);
 
-        try {
-          const result = await sendWhatsAppMessage(from, 'Hi, how can I help you today?');
-          console.log('Auto-reply sent:', result);
-        } catch (error) {
-          console.error('Failed to send auto-reply:', error);
-        }
+        (async () => {
+          try {
+            const result = await sendWhatsAppMessage(from, 'Hi, how can I help you today?');
+            console.log('Auto-reply sent:', result);
+          } catch (error) {
+            console.error('Failed to send auto-reply:', error);
+          }
+        })();
       }
     }
   }
