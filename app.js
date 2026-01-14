@@ -1,6 +1,9 @@
 // Import Express.js
 const express = require('express');
 
+// Import message sender
+const { sendWhatsAppMessage } = require('./whatsapp-sender');
+
 // Configure dotenv
 require('dotenv').config();
 
@@ -27,9 +30,6 @@ app.get('/', (req, res) => {
     res.status(403).end();
   }
 });
-
-// Import message sender
-const { sendWhatsAppMessage } = require('./whatsapp-sender');
 
 // Route for POST requests
 app.post('/', async (req, res) => {

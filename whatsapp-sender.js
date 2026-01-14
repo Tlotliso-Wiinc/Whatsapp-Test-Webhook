@@ -111,7 +111,7 @@ async function sendMessageWithUrlPreview(recipientPhone, messageText, previewUrl
 // Example usage
 async function main() {
   // Send a simple text message
-  const result = await sendWhatsAppMessage('+26657683501', 'Hello ntoana!');
+  const result = await sendWhatsAppMessage('26657683501', 'Hello mvetho!');
   console.log('Message sent:', result);
 
   // Send a message with URL preview
