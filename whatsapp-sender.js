@@ -1,9 +1,11 @@
 // WhatsApp Business API Message Sender
+require('dotenv').config();
+
 // Configuration
 const config = {
-  phoneNumberId: '1004637292722037',
-  accessToken: 'EAAbwiAPrZCrUBQROPNZCF88ayAlHn7TW1Uo4ZCZBxWrPiZCLHMW5dzW3dUqGoDzMz5eJDyhOLdaan4G9Ev7fwmJBZAQLkXEeag2wTQFlkta1wJcngsOjtvPDnbHZB3jOTJcZBM6ttZCFYdkzyPNiaZBPqUTNKkQS0ThDTAycgifb9lWx99elCinZALJw4PywfWVwOFVZAIkDX0iwGZCVZAV1AuTjbJcLnOjAfndbIhLNxpmjWF',
-  apiVersion: 'v23.0'
+  phoneNumberId: process.env.PHONE_NUMBER_ID,
+  accessToken: process.env.ACCESS_TOKEN,
+  apiVersion: process.env.API_VERSION
 };
 
 /**
@@ -109,15 +111,17 @@ async function sendMessageWithUrlPreview(recipientPhone, messageText, previewUrl
 // Example usage
 async function main() {
   // Send a simple text message
-  //const result = await sendWhatsAppMessage('+26657683501', 'Hello from WhatsApp API!');
-  //console.log('Message sent:', result);
+  const result = await sendWhatsAppMessage('+26657683501', 'Hello ntoana!');
+  console.log('Message sent:', result);
 
   // Send a message with URL preview
+  /*
   const urlResult = await sendMessageWithUrlPreview(
     '+26657683501',
     'Check out this link: https://example.com'
   );
   console.log('URL message sent:', urlResult);
+  */
 }
 
 // For Node.js environments
