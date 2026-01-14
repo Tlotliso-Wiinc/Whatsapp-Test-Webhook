@@ -1,5 +1,6 @@
 // WhatsApp Business API Message Sender
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Configuration
 const config = {
@@ -14,7 +15,7 @@ const config = {
  * @param {string} messageText - The text message to send
  * @returns {Promise<Object>} API response
  */
-async function sendWhatsAppMessage(recipientPhone, messageText) {
+export async function sendWhatsAppMessage(recipientPhone, messageText) {
   const url = `https://graph.facebook.com/${config.apiVersion}/${config.phoneNumberId}/messages`;
 
   const payload = {
@@ -64,7 +65,7 @@ async function sendWhatsAppMessage(recipientPhone, messageText) {
  * @param {boolean} previewUrl - Whether to show URL preview
  * @returns {Promise<Object>} API response
  */
-async function sendMessageWithUrlPreview(recipientPhone, messageText, previewUrl = true) {
+export async function sendMessageWithUrlPreview(recipientPhone, messageText, previewUrl = true) {
   const url = `https://graph.facebook.com/${config.apiVersion}/${config.phoneNumberId}/messages`;
 
   const payload = {
@@ -124,16 +125,9 @@ async function main() {
   */
 }
 
-// For Node.js environments
-if (typeof require !== 'undefined' && require.main === module) {
+// For Node.js environments - only run if this is the main module
+if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
 
-// Export for use as a module
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    sendWhatsAppMessage,
-    sendMessageWithUrlPreview,
-    config
-  };
-}
+export { config };

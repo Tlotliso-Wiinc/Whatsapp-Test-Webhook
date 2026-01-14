@@ -1,11 +1,15 @@
 // Import Express.js
-const express = require('express');
+import express from 'express';
 
 // Import message sender
-const { sendWhatsAppMessage } = require('./whatsapp-sender');
+import { sendWhatsAppMessage } from './whatsapp-sender.js';
+
+// Import OpenAI service
+import { getAIResponse } from './openai-service.js';
 
 // Configure dotenv
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Create an Express app
 const app = express();
@@ -47,14 +51,21 @@ app.post('/', async (req, res) => {
       // Only reply to text messages for now
       if (message.type === 'text') {
         const from = message.from;
-        console.log(`Received message from ${from}: ${message.text.body}`);
+        const userMessage = message.text.body;
+        console.log(`Received message from ${from}: ${userMessage}`);
 
         (async () => {
           try {
-            const result = await sendWhatsAppMessage(from, 'Hi, how can I help you today?');
-            console.log('Auto-reply sent:', result);
+            // Get AI-generated response
+            console.log('Generating AI response...');
+            const aiResponse = await getAIResponse(userMessage, from);
+            console.log(`AI Response: ${aiResponse}`);
+
+            // Send the AI response via WhatsApp
+            const result = await sendWhatsAppMessage(from, aiResponse);
+            console.log('AI reply sent:', result);
           } catch (error) {
-            console.error('Failed to send auto-reply:', error);
+            console.error('Failed to send AI reply:', error);
           }
         })();
       }
