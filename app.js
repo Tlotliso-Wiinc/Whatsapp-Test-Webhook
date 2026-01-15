@@ -5,7 +5,7 @@ import express from 'express';
 import { sendWhatsAppMessage } from './whatsapp-sender.js';
 
 // Import OpenAI service
-import { getAIResponse } from './openai-service.js';
+import { getAIResponse, getAIResponseWithHistory } from './openai-service.js';
 
 // Import database models
 import { User, Chat, Message, initializeDatabase } from './models/index.js';
@@ -96,6 +96,29 @@ async function saveMessageToChat(chatId, userId, content, messageType = 'human')
   }
 }
 
+// Helper function to get chat history for OpenAI
+async function getChatHistory(chatId, limit = 10) {
+  try {
+    const messages = await Message.findAll({
+      where: { chat_id: chatId },
+      order: [['created_at', 'ASC']],
+      limit: limit
+    });
+
+    // Convert to OpenAI format
+    const conversationHistory = messages.map(msg => ({
+      role: msg.type === 'human' ? 'user' : 'assistant',
+      content: msg.content
+    }));
+
+    console.log(`Retrieved ${conversationHistory.length} messages from chat history`);
+    return conversationHistory;
+  } catch (error) {
+    console.error('Error retrieving chat history:', error);
+    throw error;
+  }
+}
+
 // Route for GET requests
 app.get('/', (req, res) => {
   const { 'hub.mode': mode, 'hub.challenge': challenge, 'hub.verify_token': token } = req.query;
@@ -141,9 +164,13 @@ app.post('/', async (req, res) => {
             console.log('Saving user message to chat...');
             await saveMessageToChat(chat.id, user.id, userMessage, 'human');
 
-            // Get AI-generated response
-            console.log('Generating AI response...');
-            const aiResponse = await getAIResponse(userMessage, from);
+            // Step 4: Get chat history for context
+            console.log('Retrieving chat history...');
+            const chatHistory = await getChatHistory(chat.id);
+
+            // Step 5: Get AI-generated response with history
+            console.log('Generating AI response with history...');
+            const aiResponse = await getAIResponseWithHistory(chatHistory);
             console.log(`AI Response: ${aiResponse}`);
 
             // Save AI response to chat
