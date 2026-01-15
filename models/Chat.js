@@ -1,23 +1,22 @@
 import { Model } from 'sequelize';
 
 export default (sequelize, DataTypes) => {
-    class User extends Model {
+    class Chat extends Model {
         /**
          * Helper method for defining associations.
          * This method is not a part of Sequelize lifecycle.
          * The `models/index` file will call this method automatically.
          */
         static associate(models) {
-            // Define associations here
-            // User has many Chats
-            User.hasMany(models.Chat, {
+            // Define association: Chat belongs to User
+            Chat.belongsTo(models.User, {
                 foreignKey: 'user_id',
-                as: 'chats'
+                as: 'user'
             });
         }
     }
 
-    User.init(
+    Chat.init(
         {
             id: {
                 type: DataTypes.INTEGER,
@@ -25,58 +24,52 @@ export default (sequelize, DataTypes) => {
                 autoIncrement: true,
                 allowNull: false
             },
-            name: {
-                type: DataTypes.STRING,
-                allowNull: true,
-                comment: 'Full name of the user'
+            user_id: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                references: {
+                    model: 'users',
+                    key: 'id'
+                },
+                onUpdate: 'CASCADE',
+                onDelete: 'CASCADE',
+                comment: 'Foreign key to User'
             },
-            phone: {
+            uuid: {
                 type: DataTypes.STRING,
                 allowNull: false,
                 unique: true,
-                validate: {
-                    notEmpty: true
-                },
-                comment: 'Phone number (unique identifier)'
+                defaultValue: DataTypes.UUIDV4,
+                comment: 'Unique identifier for the chat'
             },
-            email: {
+            title: {
                 type: DataTypes.STRING,
                 allowNull: true,
-                unique: true,
-                validate: {
-                    isEmail: true
-                },
-                comment: 'Email address'
+                comment: 'Title of the chat'
             },
-            firstname: {
-                type: DataTypes.STRING,
+            summary: {
+                type: DataTypes.TEXT,
                 allowNull: true,
-                comment: 'First name of the user'
-            },
-            lastname: {
-                type: DataTypes.STRING,
-                allowNull: true,
-                comment: 'Last name of the user'
+                comment: 'Summary of the chat conversation'
             }
         },
         {
             sequelize,
-            modelName: 'User',
-            tableName: 'users',
+            modelName: 'Chat',
+            tableName: 'chats',
             timestamps: true,
             underscored: true,
             indexes: [
                 {
                     unique: true,
-                    fields: ['phone']
+                    fields: ['uuid']
                 },
                 {
-                    unique: true,
-                    fields: ['email']
+                    fields: ['user_id']
                 }
             ]
         }
     );
 
-    return User;
+    return Chat;
 };
