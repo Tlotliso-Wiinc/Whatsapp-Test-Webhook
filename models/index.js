@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import config from '../config/database.js';
 import UserModel from './User.js';
 import ChatModel from './Chat.js';
+import MessageModel from './Message.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,9 +18,10 @@ const sequelize = new Sequelize(dbConfig);
 // Initialize models
 const User = UserModel(sequelize, Sequelize.DataTypes);
 const Chat = ChatModel(sequelize, Sequelize.DataTypes);
+const Message = MessageModel(sequelize, Sequelize.DataTypes);
 
 // Define associations
-const models = { User, Chat };
+const models = { User, Chat, Message };
 Object.keys(models).forEach(modelName => {
     if (models[modelName].associate) {
         models[modelName].associate(models);
@@ -41,5 +43,5 @@ const initializeDatabase = async () => {
 };
 
 // Export models and sequelize instance
-export { sequelize, User, Chat, initializeDatabase };
-export default { sequelize, User, Chat, initializeDatabase };
+export { sequelize, User, Chat, Message, initializeDatabase };
+export default { sequelize, User, Chat, Message, initializeDatabase };

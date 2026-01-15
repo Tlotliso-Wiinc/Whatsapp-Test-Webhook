@@ -14,6 +14,12 @@ export default (sequelize, DataTypes) => {
                 foreignKey: 'user_id',
                 as: 'chats'
             });
+
+            // User has many Messages
+            User.hasMany(models.Message, {
+                foreignKey: 'user_id',
+                as: 'messages'
+            });
         }
     }
 
