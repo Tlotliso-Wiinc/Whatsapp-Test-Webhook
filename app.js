@@ -97,7 +97,7 @@ async function saveMessageToChat(chatId, userId, content, messageType = 'human')
 }
 
 // Helper function to get chat history for OpenAI
-async function getChatHistory(chatId, limit = 10) {
+async function getChatHistory(chatId, limit = 50) {
   try {
     const messages = await Message.findAll({
       where: { chat_id: chatId },
