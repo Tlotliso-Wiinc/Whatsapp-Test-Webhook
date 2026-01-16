@@ -210,7 +210,7 @@
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.totalChats}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.totalMessages}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {safeFormatDate(getDateFromObject(user))}
+                                            {safeFormatDate(user.createdAt)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             <button
@@ -365,7 +365,7 @@
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{chat.messageCount}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {safeFormatDate(getDateFromObject(chat))}
+                                                {safeFormatDate(chat.createdAt)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 <div className="flex space-x-2">
@@ -437,7 +437,7 @@
                                         <strong>Summary:</strong> {selectedChat.summary}
                                     </p>
                                     <p className="text-xs text-gray-500 mt-1">
-                                        Created: {safeFormatDate(getDateFromObject(selectedChat), 'dateTimeString')}
+                                        Created: {safeFormatDate(selectedChat.createdAt, 'dateTimeString')}
                                     </p>
                                 </div>
                             )}
@@ -452,7 +452,7 @@
                                             }`}>
                                                 <p className="text-sm">{message.content}</p>
                                                 <p className="text-xs mt-1 opacity-75">
-                                                    {safeFormatDate(getDateFromObject(message), 'timeString')}
+                                                    {safeFormatDate(message.createdAt, 'timeString')}
                                                 </p>
                                             </div>
                                         </div>
