@@ -14,6 +14,7 @@ import { User, Chat, Message, initializeDatabase } from './models/index.js';
 import userRoutes from './routes/users.js';
 import chatRoutes from './routes/chats.js';
 import messageRoutes from './routes/messages.js';
+import dashboardRoutes from './routes/dashboard.js';
 
 // Configure dotenv
 import dotenv from 'dotenv';
@@ -105,6 +106,14 @@ async function startServer() {
     res.status(200).end();
   });
 
+  // Serve static files for React dashboard
+  app.use('/dashboard', express.static('public'));
+  
+  // Dashboard route - serve React app
+  app.get('/dashboard', (req, res) => {
+    res.sendFile('index.html', { root: 'public' });
+  });
+
   // API Routes
   console.log('Registering API routes...');
   
@@ -119,6 +128,8 @@ async function startServer() {
   console.log('Chats routes registered');
   app.use('/api/messages', messageRoutes);
   console.log('Messages routes registered');
+  app.use('/api/dashboard', dashboardRoutes);
+  console.log('Dashboard routes registered');
 
   // Log all registered routes
   if (app._router && app._router.stack) {

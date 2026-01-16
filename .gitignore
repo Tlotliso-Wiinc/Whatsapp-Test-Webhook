@@ -2,3 +2,4 @@ node_modules
 .env
 SEQUELIZE_SETUP.md
 API_DOCUMENTATION.md
+DASHBOARD_README.md

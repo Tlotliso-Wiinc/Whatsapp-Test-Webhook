@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Chatbot Dashboard</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-button.active { 
+            background-color: rgb(59 130 246);
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // API service
+        const API_BASE = '/api/dashboard';
+        
+        const api = {
+            getStats: () => fetch(`${API_BASE}/stats`).then(r => r.json()),
+            getUsers: (page = 1, limit = 10) => 
+                fetch(`${API_BASE}/users?page=${page}&limit=${limit}`).then(r => r.json()),
+            getChats: (page = 1, limit = 10) => 
+                fetch(`${API_BASE}/chats?page=${page}&limit=${limit}`).then(r => r.json()),
+            getChatDetails: (id) => 
+                fetch(`${API_BASE}/chats/${id}`).then(r => r.json()),
+            getKnowledge: (page = 1, limit = 10, type = '') => 
+                fetch(`${API_BASE}/knowledge?page=${page}&limit=${limit}${type ? `&type=${type}` : ''}`).then(r => r.json()),
+            createKnowledge: (data) => 
+                fetch(`${API_BASE}/knowledge`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                }).then(r => r.json()),
+            updateKnowledge: (id, data) => 
+                fetch(`${API_BASE}/knowledge/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                }).then(r => r.json()),
+            deleteKnowledge: (id) => 
+                fetch(`${API_BASE}/knowledge/${id}`, { method: 'DELETE' }).then(r => r.json())
+        };
+
+        // Stats Card Component
+        function StatsCard({ title, value, icon, color = "blue" }) {
+            const colorClasses = {
+                blue: "bg-blue-500",
+                green: "bg-green-500",
+                yellow: "bg-yellow-500",
+                purple: "bg-purple-500",
+                red: "bg-red-500"
+            };
+
+            return (
+                <div className="bg-white rounded-lg shadow p-6">
+                    <div className="flex items-center">
+                        <div className={`${colorClasses[color]} p-3 rounded-full mr-4`}>
+                            <i data-lucide={icon} className="w-6 h-6 text-white"></i>
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-600">{title}</p>
+                            <p className="text-2xl font-bold text-gray-900">{value}</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Users Table Component
+        function UsersTable() {
+            const [users, setUsers] = useState([]);
+            const [pagination, setPagination] = useState({});
+            const [loading, setLoading] = useState(true);
+
+            const loadUsers = async (page = 1) => {
+                setLoading(true);
+                try {
+                    const data = await api.getUsers(page);
+                    setUsers(data.users);
+                    setPagination(data.pagination);
+                } catch (error) {
+                    console.error('Error loading users:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                loadUsers();
+                lucide.createIcons();
+            }, []);
+
+            useEffect(() => {
+                lucide.createIcons();
+            }, [users]);
+
+            return (
+                <div className="bg-white rounded-lg shadow">
+                    <div className="px-6 py-4 border-b border-gray-200">
+                        <h3 className="text-lg font-medium text-gray-900">Users</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chats</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Messages</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {loading ? (
+                                    <tr><td colSpan="6" className="px-6 py-4 text-center">Loading...</td></tr>
+                                ) : users.map(user => (
+                                    <tr key={user.id}>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.id}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.phone}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.name}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.totalChats}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.totalMessages}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {new Date(user.created_at).toLocaleDateString()}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    {pagination.totalPages > 1 && (
+                        <div className="px-6 py-4 border-t border-gray-200">
+                            <div className="flex justify-between">
+                                <button
+                                    onClick={() => loadUsers(pagination.page - 1)}
+                                    disabled={pagination.page <= 1}
+                                    className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+                                >
+                                    Previous
+                                </button>
+                                <span className="py-2">Page {pagination.page} of {pagination.totalPages}</span>
+                                <button
+                                    onClick={() => loadUsers(pagination.page + 1)}
+                                    disabled={pagination.page >= pagination.totalPages}
+                                    className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Chats Table Component
+        function ChatsTable() {
+            const [chats, setChats] = useState([]);
+            const [pagination, setPagination] = useState({});
+            const [selectedChat, setSelectedChat] = useState(null);
+            const [loading, setLoading] = useState(true);
+
+            const loadChats = async (page = 1) => {
+                setLoading(true);
+                try {
+                    const data = await api.getChats(page);
+                    setChats(data.chats);
+                    setPagination(data.pagination);
+                } catch (error) {
+                    console.error('Error loading chats:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const loadChatDetails = async (chatId) => {
+                try {
+                    const chat = await api.getChatDetails(chatId);
+                    setSelectedChat(chat);
+                } catch (error) {
+                    console.error('Error loading chat details:', error);
+                }
+            };
+
+            useEffect(() => {
+                loadChats();
+                lucide.createIcons();
+            }, []);
+
+            useEffect(() => {
+                lucide.createIcons();
+            }, [chats, selectedChat]);
+
+            return (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="bg-white rounded-lg shadow">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-lg font-medium text-gray-900">Chats</h3>
+                        </div>
+                        <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50 sticky top-0">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Messages</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Activity</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {loading ? (
+                                        <tr><td colSpan="3" className="px-6 py-4 text-center">Loading...</td></tr>
+                                    ) : chats.map(chat => (
+                                        <tr 
+                                            key={chat.id} 
+                                            onClick={() => loadChatDetails(chat.id)}
+                                            className="cursor-pointer hover:bg-gray-50"
+                                        >
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {chat.User?.phone || 'Unknown'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{chat.messageCount}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {new Date(chat.lastMessageAt).toLocaleDateString()}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {pagination.totalPages > 1 && (
+                            <div className="px-6 py-4 border-t border-gray-200">
+                                <div className="flex justify-between">
+                                    <button
+                                        onClick={() => loadChats(pagination.page - 1)}
+                                        disabled={pagination.page <= 1}
+                                        className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+                                    >
+                                        Previous
+                                    </button>
+                                    <span className="py-2">Page {pagination.page} of {pagination.totalPages}</span>
+                                    <button
+                                        onClick={() => loadChats(pagination.page + 1)}
+                                        disabled={pagination.page >= pagination.totalPages}
+                                        className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {selectedChat && (
+                        <div className="bg-white rounded-lg shadow">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                                <h3 className="text-lg font-medium text-gray-900">
+                                    Chat with {selectedChat.User?.phone}
+                                </h3>
+                            </div>
+                            <div className="p-6 max-h-96 overflow-y-auto">
+                                {selectedChat.Messages?.map(message => (
+                                    <div key={message.id} className={`mb-4 ${message.type === 'human' ? 'text-right' : 'text-left'}`}>
+                                        <div className={`inline-block max-w-xs px-4 py-2 rounded-lg ${
+                                            message.type === 'human' 
+                                                ? 'bg-blue-500 text-white' 
+                                                : 'bg-gray-200 text-gray-900'
+                                        }`}>
+                                            <p className="text-sm">{message.content}</p>
+                                            <p className="text-xs mt-1 opacity-75">
+                                                {new Date(message.created_at).toLocaleTimeString()}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Knowledge Base Component
+        function KnowledgeBase() {
+            const [items, setItems] = useState([]);
+            const [pagination, setPagination] = useState({});
+            const [loading, setLoading] = useState(true);
+            const [showForm, setShowForm] = useState(false);
+            const [editingItem, setEditingItem] = useState(null);
+            const [filter, setFilter] = useState('');
+
+            const [formData, setFormData] = useState({
+                title: '',
+                type: 'text',
+                content: '',
+                url: '',
+                tags: []
+            });
+
+            const loadKnowledge = async (page = 1) => {
+                setLoading(true);
+                try {
+                    const data = await api.getKnowledge(page, 10, filter);
+                    setItems(data.items);
+                    setPagination(data.pagination);
+                } catch (error) {
+                    console.error('Error loading knowledge base:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                try {
+                    if (editingItem) {
+                        await api.updateKnowledge(editingItem.id, formData);
+                    } else {
+                        await api.createKnowledge(formData);
+                    }
+                    setFormData({ title: '', type: 'text', content: '', url: '', tags: [] });
+                    setShowForm(false);
+                    setEditingItem(null);
+                    loadKnowledge();
+                } catch (error) {
+                    console.error('Error saving knowledge item:', error);
+                }
+            };
+
+            const handleEdit = (item) => {
+                setFormData({
+                    title: item.title,
+                    type: item.type,
+                    content: item.content || '',
+                    url: item.url || '',
+                    tags: item.tags || []
+                });
+                setEditingItem(item);
+                setShowForm(true);
+            };
+
+            const handleDelete = async (id) => {
+                if (confirm('Are you sure you want to delete this item?')) {
+                    try {
+                        await api.deleteKnowledge(id);
+                        loadKnowledge();
+                    } catch (error) {
+                        console.error('Error deleting knowledge item:', error);
+                    }
+                }
+            };
+
+            useEffect(() => {
+                loadKnowledge();
+                lucide.createIcons();
+            }, [filter]);
+
+            useEffect(() => {
+                lucide.createIcons();
+            }, [items]);
+
+            return (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-medium text-gray-900">Knowledge Base</h3>
+                        <div className="flex space-x-2">
+                            <select
+                                value={filter}
+                                onChange={(e) => setFilter(e.target.value)}
+                                className="px-3 py-2 border border-gray-300 rounded-md"
+                            >
+                                <option value="">All Types</option>
+                                <option value="text">Text</option>
+                                <option value="document">Document</option>
+                                <option value="api">API</option>
+                                <option value="website">Website</option>
+                            </select>
+                            <button
+                                onClick={() => setShowForm(true)}
+                                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                            >
+                                Add Item
+                            </button>
+                        </div>
+                    </div>
+
+                    {showForm && (
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <h4 className="text-md font-medium mb-4">
+                                {editingItem ? 'Edit Knowledge Item' : 'Add Knowledge Item'}
+                            </h4>
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Title</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.title}
+                                        onChange={(e) => setFormData({...formData, title: e.target.value})}
+                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Type</label>
+                                    <select
+                                        value={formData.type}
+                                        onChange={(e) => setFormData({...formData, type: e.target.value})}
+                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                                    >
+                                        <option value="text">Text</option>
+                                        <option value="document">Document</option>
+                                        <option value="api">API</option>
+                                        <option value="website">Website</option>
+                                    </select>
+                                </div>
+                                {(formData.type === 'text' || formData.type === 'document') && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Content</label>
+                                        <textarea
+                                            value={formData.content}
+                                            onChange={(e) => setFormData({...formData, content: e.target.value})}
+                                            rows={4}
+                                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                                        />
+                                    </div>
+                                )}
+                                {(formData.type === 'api' || formData.type === 'website') && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">URL</label>
+                                        <input
+                                            type="url"
+                                            value={formData.url}
+                                            onChange={(e) => setFormData({...formData, url: e.target.value})}
+                                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                                        />
+                                    </div>
+                                )}
+                                <div className="flex justify-end space-x-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowForm(false);
+                                            setEditingItem(null);
+                                            setFormData({ title: '', type: 'text', content: '', url: '', tags: [] });
+                                        }}
+                                        className="px-4 py-2 border border-gray-300 rounded-md"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                                    >
+                                        {editingItem ? 'Update' : 'Create'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    <div className="bg-white rounded-lg shadow">
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {loading ? (
+                                        <tr><td colSpan="5" className="px-6 py-4 text-center">Loading...</td></tr>
+                                    ) : items.map(item => (
+                                        <tr key={item.id}>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.title}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                                                    {item.type}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                <span className={`px-2 py-1 text-xs rounded-full ${
+                                                    item.is_active 
+                                                        ? 'bg-green-100 text-green-800' 
+                                                        : 'bg-red-100 text-red-800'
+                                                }`}>
+                                                    {item.is_active ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {new Date(item.created_at).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                <button
+                                                    onClick={() => handleEdit(item)}
+                                                    className="text-blue-600 hover:text-blue-900 mr-3"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(item.id)}
+                                                    className="text-red-600 hover:text-red-900"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Main Dashboard Component
+        function Dashboard() {
+            const [stats, setStats] = useState({});
+            const [activeTab, setActiveTab] = useState('overview');
+            const [loading, setLoading] = useState(true);
+
+            const loadStats = async () => {
+                try {
+                    const data = await api.getStats();
+                    setStats(data);
+                } catch (error) {
+                    console.error('Error loading stats:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                loadStats();
+                lucide.createIcons();
+            }, []);
+
+            useEffect(() => {
+                lucide.createIcons();
+            }, [activeTab]);
+
+            return (
+                <div className="min-h-screen bg-gray-50">
+                    {/* Header */}
+                    <header className="bg-white shadow">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="flex justify-between items-center py-6">
+                                <h1 className="text-3xl font-bold text-gray-900">WhatsApp Chatbot Dashboard</h1>
+                                <div className="text-sm text-gray-500">
+                                    {new Date().toLocaleString()}
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Navigation */}
+                    <div className="bg-white border-b">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <nav className="flex space-x-8">
+                                {['overview', 'users', 'chats', 'knowledge'].map(tab => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setActiveTab(tab)}
+                                        className={`py-4 px-1 border-b-2 font-medium text-sm capitalize ${
+                                            activeTab === tab
+                                                ? 'border-blue-500 text-blue-600'
+                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                        }`}
+                                    >
+                                        {tab}
+                                    </button>
+                                ))}
+                            </nav>
+                        </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                        {/* Overview Tab */}
+                        {activeTab === 'overview' && (
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    <StatsCard title="Total Users" value={loading ? '...' : stats.totalUsers} icon="users" color="blue" />
+                                    <StatsCard title="Total Chats" value={loading ? '...' : stats.totalChats} icon="message-circle" color="green" />
+                                    <StatsCard title="Total Messages" value={loading ? '...' : stats.totalMessages} icon="message-square" color="yellow" />
+                                    <StatsCard title="Knowledge Items" value={loading ? '...' : stats.totalKnowledgeItems} icon="book" color="purple" />
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    <StatsCard title="Recent Users (7d)" value={loading ? '...' : stats.recentUsers} icon="user-plus" color="green" />
+                                    <StatsCard title="Recent Messages (7d)" value={loading ? '...' : stats.recentMessages} icon="trending-up" color="blue" />
+                                    <StatsCard title="Active Knowledge Items" value={loading ? '...' : stats.activeKnowledgeItems} icon="check-circle" color="green" />
+                                    <StatsCard title="Inactive Knowledge Items" value={loading ? '...' : (stats.totalKnowledgeItems - stats.activeKnowledgeItems)} icon="x-circle" color="red" />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Users Tab */}
+                        {activeTab === 'users' && <UsersTable />}
+
+                        {/* Chats Tab */}
+                        {activeTab === 'chats' && <ChatsTable />}
+
+                        {/* Knowledge Base Tab */}
+                        {activeTab === 'knowledge' && <KnowledgeBase />}
+                    </main>
+                </div>
+            );
+        }
+
+        // Render the app
+        ReactDOM.render(<Dashboard />, document.getElementById('root'));
+    </script>
+</body>
+</html>
