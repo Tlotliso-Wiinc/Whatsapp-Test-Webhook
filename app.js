@@ -10,6 +10,11 @@ import { getAIResponse, getAIResponseWithHistory } from './openai-service.js';
 // Import database models
 import { User, Chat, Message, initializeDatabase } from './models/index.js';
 
+// Import API routes
+import userRoutes from './routes/users.js';
+import chatRoutes from './routes/chats.js';
+import messageRoutes from './routes/messages.js';
+
 // Configure dotenv
 import dotenv from 'dotenv';
 dotenv.config();
@@ -24,8 +29,117 @@ app.use(express.json());
 const port = process.env.PORT || 3000;
 const verifyToken = process.env.VERIFY_TOKEN;
 
-// Initialize database
-await initializeDatabase();
+// Initialize database and start server
+async function startServer() {
+  await initializeDatabase();
+  
+  // Route for GET requests
+  app.get('/', (req, res) => {
+    const { 'hub.mode': mode, 'hub.challenge': challenge, 'hub.verify_token': token } = req.query;
+
+    if (mode === 'subscribe' && token === verifyToken) {
+      console.log('WEBHOOK VERIFIED');
+      res.status(200).send(challenge);
+    } else {
+      res.status(403).end();
+    }
+  });
+
+  // Route for POST requests
+  app.post('/', async (req, res) => {
+    const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
+    console.log(`\n\nWebhook received ${timestamp}\n`);
+    console.log(JSON.stringify(req.body, null, 2));
+
+    // Parse webhook payload
+    const body = req.body;
+
+    if (body.object === 'whatsapp_business_account') {
+      if (body.entry && body.entry[0].changes && body.entry[0].changes[0].value.messages && body.entry[0].changes[0].value.messages[0]) {
+        const message = body.entry[0].changes[0].value.messages[0];
+
+        // Only reply to text messages for now
+        if (message.type === 'text') {
+          const from = message.from;
+          const userMessage = message.text.body;
+          console.log(`Received message from ${from}: ${userMessage}`);
+
+          (async () => {
+            try {
+              // Step 1: Find or create user
+              console.log('Checking user existence...');
+              const user = await findOrCreateUser(from);
+              
+              // Step 2: Find or create chat for user
+              console.log('Checking chat existence...');
+              const chat = await findOrCreateChat(user.id);
+              
+              // Step 3: Save the WhatsApp message to chat
+              console.log('Saving user message to chat...');
+              await saveMessageToChat(chat.id, user.id, userMessage, 'human');
+
+              // Step 4: Get chat history for context
+              console.log('Retrieving chat history...');
+              const chatHistory = await getChatHistory(chat.id);
+
+              // Step 5: Get AI-generated response with history
+              console.log('Generating AI response with history...');
+              const aiResponse = await getAIResponseWithHistory(chatHistory);
+              console.log(`AI Response: ${aiResponse}`);
+
+              // Save AI response to chat
+              console.log('Saving AI response to chat...');
+              await saveMessageToChat(chat.id, user.id, aiResponse, 'ai');
+
+              // Send the AI response via WhatsApp
+              const result = await sendWhatsAppMessage(from, aiResponse);
+              console.log('AI reply sent:', result);
+            } catch (error) {
+              console.error('Failed to process message:', error);
+            }
+          })();
+        }
+      }
+    }
+
+    res.status(200).end();
+  });
+
+  // API Routes
+  console.log('Registering API routes...');
+  
+  // Add a simple test route
+  app.get('/api/test', (req, res) => {
+    res.json({ message: 'API is working!' });
+  });
+  
+  app.use('/api/users', userRoutes);
+  console.log('Users routes registered');
+  app.use('/api/chats', chatRoutes);
+  console.log('Chats routes registered');
+  app.use('/api/messages', messageRoutes);
+  console.log('Messages routes registered');
+
+  // Log all registered routes
+  if (app._router && app._router.stack) {
+    app._router.stack.forEach(function(r){
+      if (r.route && r.route.path){
+        console.log('Registered route:', r.route.path);
+      }
+    });
+  }
+
+  // Start the server
+  app.listen(port, () => {
+    console.log(`\nListening on port ${port}\n`);
+  });
+}
+
+// Start the server
+startServer().catch(error => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
+});
 
 // Helper function to find or create user by phone number
 async function findOrCreateUser(phoneNumber) {
@@ -118,80 +232,3 @@ async function getChatHistory(chatId, limit = 50) {
     throw error;
   }
 }
-
-// Route for GET requests
-app.get('/', (req, res) => {
-  const { 'hub.mode': mode, 'hub.challenge': challenge, 'hub.verify_token': token } = req.query;
-
-  if (mode === 'subscribe' && token === verifyToken) {
-    console.log('WEBHOOK VERIFIED');
-    res.status(200).send(challenge);
-  } else {
-    res.status(403).end();
-  }
-});
-
-// Route for POST requests
-app.post('/', async (req, res) => {
-  const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
-  console.log(`\n\nWebhook received ${timestamp}\n`);
-  console.log(JSON.stringify(req.body, null, 2));
-
-  // Parse webhook payload
-  const body = req.body;
-
-  if (body.object === 'whatsapp_business_account') {
-    if (body.entry && body.entry[0].changes && body.entry[0].changes[0].value.messages && body.entry[0].changes[0].value.messages[0]) {
-      const message = body.entry[0].changes[0].value.messages[0];
-
-      // Only reply to text messages for now
-      if (message.type === 'text') {
-        const from = message.from;
-        const userMessage = message.text.body;
-        console.log(`Received message from ${from}: ${userMessage}`);
-
-        (async () => {
-          try {
-            // Step 1: Find or create user
-            console.log('Checking user existence...');
-            const user = await findOrCreateUser(from);
-            
-            // Step 2: Find or create chat for user
-            console.log('Checking chat existence...');
-            const chat = await findOrCreateChat(user.id);
-            
-            // Step 3: Save the WhatsApp message to chat
-            console.log('Saving user message to chat...');
-            await saveMessageToChat(chat.id, user.id, userMessage, 'human');
-
-            // Step 4: Get chat history for context
-            console.log('Retrieving chat history...');
-            const chatHistory = await getChatHistory(chat.id);
-
-            // Step 5: Get AI-generated response with history
-            console.log('Generating AI response with history...');
-            const aiResponse = await getAIResponseWithHistory(chatHistory);
-            console.log(`AI Response: ${aiResponse}`);
-
-            // Save AI response to chat
-            console.log('Saving AI response to chat...');
-            await saveMessageToChat(chat.id, user.id, aiResponse, 'ai');
-
-            // Send the AI response via WhatsApp
-            const result = await sendWhatsAppMessage(from, aiResponse);
-            console.log('AI reply sent:', result);
-          } catch (error) {
-            console.error('Failed to process message:', error);
-          }
-        })();
-      }
-    }
-  }
-
-  res.status(200).end();
-});
-
-// Start the server
-app.listen(port, () => {
-  console.log(`\nListening on port ${port}\n`);
-});
