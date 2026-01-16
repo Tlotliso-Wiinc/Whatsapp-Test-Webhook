@@ -105,7 +105,17 @@ router.get('/chats', async (req, res) => {
     const { count, rows: chats } = await Chat.findAndCountAll({
       limit,
       offset,
-      order: [['updated_at', 'DESC']]
+      order: [['updated_at', 'DESC']],
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'name', 'phone', 'email']
+      }, {
+        model: Message,
+        as: 'messages',
+        attributes: ['id'],
+        required: false
+      }]
     });
 
     // Format chat data
@@ -113,8 +123,13 @@ router.get('/chats', async (req, res) => {
       const chatData = chat.toJSON();
       
       return {
-        ...chatData,
-        messageCount: 0, // Will be updated when we fix the message include
+        id: chatData.id,
+        title: chatData.title || 'Untitled Chat',
+        summary: chatData.summary,
+        created_at: chatData.created_at,
+        updated_at: chatData.updated_at,
+        user: chatData.user,
+        messageCount: chatData.messages ? chatData.messages.length : 0,
         lastMessageAt: chatData.updated_at
       };
     });
@@ -140,7 +155,16 @@ router.get('/chats/:id', async (req, res) => {
     const chatId = req.params.id;
 
     const chat = await Chat.findOne({
-      where: { id: chatId }
+      where: { id: chatId },
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'name', 'phone', 'email']
+      }, {
+        model: Message,
+        as: 'messages',
+        order: [['created_at', 'ASC']]
+      }]
     });
 
     if (!chat) {
