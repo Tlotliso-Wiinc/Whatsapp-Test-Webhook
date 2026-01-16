@@ -24,6 +24,29 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
+        // Helper function to safely format dates
+        const safeFormatDate = (date, format = 'dateString') => {
+            if (!date) return 'N/A';
+            
+            try {
+                const dateObj = new Date(date);
+                if (isNaN(dateObj.getTime())) return 'Invalid Date';
+                
+                switch (format) {
+                    case 'dateString':
+                        return dateObj.toLocaleDateString();
+                    case 'timeString':
+                        return dateObj.toLocaleTimeString();
+                    case 'dateTimeString':
+                        return dateObj.toLocaleString();
+                    default:
+                        return dateObj.toLocaleDateString();
+                }
+            } catch (error) {
+                return 'Invalid Date';
+            }
+        };
+
         // API service
         const API_BASE = '/api/dashboard';
         
@@ -145,7 +168,7 @@
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.totalChats}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.totalMessages}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {new Date(user.created_at).toLocaleDateString()}
+                                            {safeFormatDate(user.created_at)}
                                         </td>
                                     </tr>
                                 ))}
@@ -261,7 +284,7 @@
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{chat.messageCount}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {new Date(chat.created_at).toLocaleDateString()}
+                                                {safeFormatDate(chat.created_at)}
                                             </td>
                                         </tr>
                                     ))}
@@ -309,7 +332,7 @@
                                         <strong>Summary:</strong> {selectedChat.summary}
                                     </p>
                                     <p className="text-xs text-gray-500 mt-1">
-                                        Created: {new Date(selectedChat.created_at).toLocaleString()}
+                                        Created: {safeFormatDate(selectedChat.created_at, 'dateTimeString')}
                                     </p>
                                 </div>
                             )}
@@ -324,7 +347,7 @@
                                             }`}>
                                                 <p className="text-sm">{message.content}</p>
                                                 <p className="text-xs mt-1 opacity-75">
-                                                    {new Date(message.created_at).toLocaleTimeString()}
+                                                    {safeFormatDate(message.created_at, 'timeString')}
                                                 </p>
                                             </div>
                                         </div>
@@ -418,7 +441,7 @@
                                             {message.content}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {new Date(message.created_at).toLocaleString()}
+                                            {safeFormatDate(message.created_at, 'dateTimeString')}
                                         </td>
                                     </tr>
                                 ))}
@@ -670,7 +693,7 @@
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {new Date(item.created_at).toLocaleDateString()}
+                                                {safeFormatDate(item.created_at)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 <button
