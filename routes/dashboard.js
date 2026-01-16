@@ -57,9 +57,11 @@ router.get('/users', async (req, res) => {
       order: [['created_at', 'DESC']],
       include: [{
         model: Chat,
+        as: 'chats',
         attributes: ['id'],
         include: [{
           model: Message,
+          as: 'messages',
           attributes: ['id'],
           required: false
         }]
@@ -69,12 +71,12 @@ router.get('/users', async (req, res) => {
     // Format user data with message counts
     const formattedUsers = users.map(user => {
       const userData = user.toJSON();
-      const totalMessages = userData.Chats.reduce((sum, chat) => sum + (chat.Messages ? chat.Messages.length : 0), 0);
+      const totalMessages = userData.chats.reduce((sum, chat) => sum + (chat.messages ? chat.messages.length : 0), 0);
       return {
         ...userData,
-        totalChats: userData.Chats.length,
+        totalChats: userData.chats.length,
         totalMessages,
-        Chats: undefined // Remove nested data
+        chats: undefined // Remove nested data
       };
     });
 
