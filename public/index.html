@@ -56,6 +56,12 @@
             }
         };
 
+        // Helper function to get date from object (handles both camelCase and underscore)
+        const getDateFromObject = (obj) => {
+            if (!obj) return null;
+            return obj.createdAt || obj.created_at || obj.updatedAt || obj.updated_at || null;
+        };
+
         // API service
         const API_BASE = '/api/dashboard';
         
@@ -177,7 +183,7 @@
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.totalChats}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.totalMessages}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {safeFormatDate(user.created_at)}
+                                            {safeFormatDate(getDateFromObject(user))}
                                         </td>
                                     </tr>
                                 ))}
@@ -293,7 +299,7 @@
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{chat.messageCount}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {safeFormatDate(chat.created_at)}
+                                                {safeFormatDate(getDateFromObject(chat))}
                                             </td>
                                         </tr>
                                     ))}
@@ -341,7 +347,7 @@
                                         <strong>Summary:</strong> {selectedChat.summary}
                                     </p>
                                     <p className="text-xs text-gray-500 mt-1">
-                                        Created: {safeFormatDate(selectedChat.created_at, 'dateTimeString')}
+                                        Created: {safeFormatDate(getDateFromObject(selectedChat), 'dateTimeString')}
                                     </p>
                                 </div>
                             )}
@@ -356,7 +362,7 @@
                                             }`}>
                                                 <p className="text-sm">{message.content}</p>
                                                 <p className="text-xs mt-1 opacity-75">
-                                                    {safeFormatDate(message.created_at, 'timeString')}
+                                                    {safeFormatDate(getDateFromObject(message), 'timeString')}
                                                 </p>
                                             </div>
                                         </div>
@@ -450,7 +456,7 @@
                                             {message.content}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {safeFormatDate(message.created_at, 'dateTimeString')}
+                                            {safeFormatDate(getDateFromObject(message), 'dateTimeString')}
                                         </td>
                                     </tr>
                                 ))}
@@ -702,7 +708,7 @@
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {safeFormatDate(item.created_at)}
+                                                {safeFormatDate(getDateFromObject(item))}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 <button
