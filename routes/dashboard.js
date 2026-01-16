@@ -178,6 +178,59 @@ router.get('/chats/:id', async (req, res) => {
   }
 });
 
+// Get all messages with user and chat info
+router.get('/messages', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    const { count, rows: messages } = await Message.findAndCountAll({
+      limit,
+      offset,
+      order: [['created_at', 'DESC']],
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'name', 'phone', 'email'],
+        required: false
+      }, {
+        model: Chat,
+        as: 'chat',
+        attributes: ['id', 'title', 'uuid'],
+        required: false
+      }]
+    });
+
+    // Format message data
+    const formattedMessages = messages.map(message => {
+      const messageData = message.toJSON();
+      
+      return {
+        id: messageData.id,
+        type: messageData.type,
+        content: messageData.content,
+        created_at: messageData.created_at,
+        user: messageData.user,
+        chat: messageData.chat
+      };
+    });
+
+    res.json({
+      messages: formattedMessages,
+      pagination: {
+        page,
+        limit,
+        total: count,
+        totalPages: Math.ceil(count / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
 // Get all knowledge base items
 router.get('/knowledge', async (req, res) => {
   try {
