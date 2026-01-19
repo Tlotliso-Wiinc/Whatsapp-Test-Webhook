@@ -91,7 +91,7 @@ window.KnowledgeBase = function KnowledgeBase() {
                     <select
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-md"
+                        className="px-3 py-2 text-sm border border-gray-300 rounded-md"
                     >
                         <option value="">All Types</option>
                         <option value="text">Text</option>
@@ -101,7 +101,7 @@ window.KnowledgeBase = function KnowledgeBase() {
                     </select>
                     <button
                         onClick={() => setShowForm(true)}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                        className="px-4 py-2 bg-blue-500 text-sm text-white rounded-md hover:bg-blue-600"
                     >
                         Add Item
                     </button>
