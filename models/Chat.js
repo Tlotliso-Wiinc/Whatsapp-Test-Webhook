@@ -57,6 +57,11 @@ export default (sequelize, DataTypes) => {
                 type: DataTypes.TEXT,
                 allowNull: true,
                 comment: 'Summary of the chat conversation'
+            },
+            open: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: true
             }
         },
         {
