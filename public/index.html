@@ -949,8 +949,10 @@
                                 </div>
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {/*
                                     <StatsCard title="Recent Users (7d)" value={loading ? '...' : (stats.recentUsers || 0)} icon="user-plus" color="green" />
                                     <StatsCard title="Recent Messages (7d)" value={loading ? '...' : (stats.recentMessages || 0)} icon="trending-up" color="blue" />
+                                */}
                                     <StatsCard title="Active Knowledge Items" value={loading ? '...' : (stats.activeKnowledgeItems || 0)} icon="check-circle" color="green" />
                                     <StatsCard title="Inactive Knowledge Items" value={loading ? '...' : ((stats.totalKnowledgeItems || 0) - (stats.activeKnowledgeItems || 0))} icon="x-circle" color="red" />
                                 </div>
