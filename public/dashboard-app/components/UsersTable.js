@@ -106,15 +106,17 @@ window.UsersTable = function UsersTable() {
         <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                 <h3 className="text-lg font-medium text-gray-900">Users</h3>
+                {!showAddUserForm && (
                 <button
                     onClick={() => {
                         setShowAddUserForm(true);
                         setCreateError(null);
                     }}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                    className="px-4 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600"
                 >
                     Add User
                 </button>
+                )}
             </div>
 
             {showAddUserForm && (
@@ -164,16 +166,16 @@ window.UsersTable = function UsersTable() {
                                         setCreateError(null);
                                         setNewUserData({ phone: '', name: '', email: '' });
                                     }}
-                                    className="px-4 py-2 border border-gray-300 rounded-md"
+                                    className="px-4 py-2 text-sm border border-gray-300 rounded-md"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={creatingUser}
-                                    className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:bg-gray-300"
+                                    className="px-4 py-2 text-sm bg-blue-500 text-white rounded-md disabled:bg-gray-300"
                                 >
-                                    {creatingUser ? 'Creating...' : 'Create User'}
+                                    {creatingUser ? 'Adding...' : 'Submit'}
                                 </button>
                             </div>
                         </div>
